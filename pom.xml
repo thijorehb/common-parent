@@ -45,13 +45,13 @@
 		<snapshotRepository>
 			<id>nexus</id>
 			<name>Internal Snapshots Repository</name>
-			<url>http://43.205.123.132:8081/repository/snapshot/</url>
+			<url>http://13.233.254.162:8081/repository/nexus-snapshot/</url>
 			<uniqueVersion>false</uniqueVersion>
 		</snapshotRepository>
 		<repository>
 			<id>apiReleaseRepository</id>
 			<name>Internal Maven Release Repository</name>
-			<url>http://43.205.123.132:8081/repository/release/</url>
+			<url>http://13.233.254.162:8081/repository/nexus-snapshot/</url>
 		</repository>
 	</distributionManagement>
 	<profiles>
