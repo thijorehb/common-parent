@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.fei.api.commons</groupId>
+	<artifactId>hybrid-api-parent-pom</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0.1-SNAPSHOT</version>
+	<name>hybrid-api-parent-pom</name>
+	<properties>
+		<!--maven.deploy.skip - Revert back to true if developer wants to do local developement and wants to skip the artifacts deployment to nexus-->
+		<maven.deploy.skip>false</maven.deploy.skip>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+		<maven.compile.encoding>UTF-8</maven.compile.encoding>
+		<org.slf4j.simpleLogger.defaultLogLevel>info</org.slf4j.simpleLogger.defaultLogLevel>
+		<project.root.dir>${basedir}</project.root.dir>
+		<target.root.dir>${basedir}/target</target.root.dir>
+		<deployment.suffix>${user.name}</deployment.suffix>
+		<deployment.env>-${env}</deployment.env>
+		<cucumber.tags.develop>--tags @develop</cucumber.tags.develop>
+		<cucumber.tags.feature>--tags @feature</cucumber.tags.feature>
+		<cucumber.tags.hotfix>--tags @hotfix</cucumber.tags.hotfix>
+		<cucumber.tags.release>--tags @release</cucumber.tags.release>
+		<cucumber.tags.enabled>false</cucumber.tags.enabled>
+		<jgitflow.version>1.0-m5.1</jgitflow.version>
+		<commit>${user.name}-local</commit>
+		<branch>${user.name}-local</branch>
+		<repo.server.protocol>https</repo.server.protocol>
+		<repo.server.root>repo-clover.sidgs.net</repo.server.root>
+		<repo.path>content/repositories</repo.path>
+		<repo.name>apigee-</repo.name>
+		<scmUsername/>
+		<scmPassword/>
+		<!--Release repo URL for New Nexus -->
+		<releases.distribution.url>${repo.server.protocol}://${repo.server.root}/${repo.path}/${repo.name}release/
+        </releases.distribution.url>
+		<!--Snapshot repo URL for New Nexus -->
+		<snapshot.distribution.url>${repo.server.protocol}://${repo.server.root}/${repo.path}/${repo.name}snapshot/
+        </snapshot.distribution.url>
+	</properties>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>nexus</id>
+			<name>Internal Snapshots Repository</name>
+			<url>http://43.205.123.132:8081/repository/snapshot/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+		<repository>
+			<id>apiReleaseRepository</id>
+			<name>Internal Maven Release Repository</name>
+			<url>http://43.205.123.132:8081/repository/release/</url>
+		</repository>
+	</distributionManagement>
+	<profiles>
+		<!--release management -->
+		<profile>
+			<id>gitflow</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>external.atlassian.jgitflow</groupId>
+						<artifactId>jgitflow-maven-plugin</artifactId>
+						<version>1.0-m5.1</version>
+						<configuration>
+							<noDeploy>true</noDeploy>
+							<username>${scmUsername}</username>
+							<password>${scmPassword}</password>
+							<!-- <enableSshAgent>true</enableSshAgent>-->
+							<flowInitContext>
+								<masterBranchName>master</masterBranchName>
+								<developBranchName>develop</developBranchName>
+								<featureBranchPrefix>feat-</featureBranchPrefix>
+								<releaseBranchPrefix>rel-</releaseBranchPrefix>
+								<hotfixBranchPrefix>hf-</hotfixBranchPrefix>
+							</flowInitContext>
+							<!-- Keep your maven submodules at the same version as the aggregator POM -->
+							<autoVersionSubmodules>true</autoVersionSubmodules>
+							<allowSnapshots>true</allowSnapshots>
+							<!-- Share feature branches -->
+							<pushFeatures>true</pushFeatures>
+							<!-- Create a release branch when a release goal is initiated -->
+							<pushReleases>true</pushReleases>
+							<!-- Share maintenance branches -->
+							<pushHotfixes>true</pushHotfixes>
+							<!-- Prevents deployments from development workstations so that they can                            be done by a CI server -->
+							<noDeploy>true</noDeploy>
+							<!--<squash>true</squash>-->
+							<enableFeatureVersions>true</enableFeatureVersions>
+							<versionNumberToIncrement>1</versionNumberToIncrement>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!-- apigee-hybrid-->
+		<profile>
+			<id>hybrid</id>
+			<properties>
+				<apigee.profile>hybrid</apigee.profile>
+				<apigee.hosturl>https://apigee.googleapis.com</apigee.hosturl>
+				<apigee.apiversion>v1</apigee.apiversion>
+				<apigee.org>${org}</apigee.org>
+				<apigee.env>${env}</apigee.env>
+				<apigee.authtype>oauth</apigee.authtype>
+				<apigee.serviceaccount.file>${file}</apigee.serviceaccount.file>
+				<apigee.options>override</apigee.options>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.apigee.build-tools.enterprise4g</groupId>
+						<artifactId>apigee-edge-maven-plugin</artifactId>
+						<version>2.1.0</version>
+						<executions>
+							<execution>
+								<id>configure-bundle</id>
+								<phase>package</phase>
+								<goals>
+									<goal>configure</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>deploy-bundle</id>
+								<phase>install</phase>
+								<goals>
+									<goal>deploy</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!--        <profile>-->
+		<!--            <id>proxy-linting</id>-->
+		<!--            <build>-->
+		<!--                <plugins>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>org.codehaus.mojo</groupId>-->
+		<!--                        <artifactId>exec-maven-plugin</artifactId>-->
+		<!--                        <version>1.3.2</version>-->
+		<!--                        <executions>-->
+		<!--                            
+		<!&ndash; npm install &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>npm-install</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>npm</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        install-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                            
+		<!&ndash; run linting &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>proxy-linting</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>node</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        node_modules/apigeelint/cli.js -s apiproxy -f html.js > apigeelint.html-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                </plugins>-->
+		<!--            </build>-->
+		<!--        </profile>-->
+		<!--     -->
+		<!--        <profile>-->
+		<!--            <id>proxy-integration-test</id>-->
+		<!--            <build>-->
+		<!--                <plugins>-->
+		<!--                        <plugin>-->
+		<!--                            <artifactId>maven-antrun-plugin</artifactId>-->
+		<!--                            <version>1.8</version>-->
+		<!--                            <executions>-->
+		<!--                                <execution>-->
+		<!--                                    <phase>compile</phase>-->
+		<!--                                    <configuration>-->
+		<!--                                        <target>-->
+		<!--                                            <replace dir="${project.build.directory}/resources/edge"-->
+		<!--                                                     token="#{artifactId}" value="${artifactId}">-->
+		<!--                                                <include name="**/*.json"/>-->
+		<!--                                            </replace>-->
+		<!--                                            <replace dir="${project.build.directory}/resources/edge"-->
+		<!--                                                     token="#{env}" value="${env}">-->
+		<!--                                                <include name="**/*.json"/>-->
+		<!--                                            </replace>-->
+		<!--                                        </target>-->
+		<!--                                    </configuration>-->
+		<!--                                    <goals>-->
+		<!--                                        <goal>run</goal>-->
+		<!--                                    </goals>-->
+		<!--                                </execution>-->
+		<!--                            </executions>-->
+		<!--                        </plugin>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>com.apigee.edge.config</groupId>-->
+		<!--                        <artifactId>apigee-config-maven-plugin</artifactId>-->
+		<!--                        <version>1.4.3</version>-->
+		<!--                        <executions>-->
+		<!--                            <execution>-->
+		<!--                                <id>create-config-apiproduct</id>-->
+		<!--                                <phase>test-compile</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>apiproducts</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                            <execution>-->
+		<!--                                <id>create-config-developer</id>-->
+		<!--                                <phase>test-compile</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>developers</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                            <execution>-->
+		<!--                                <id>create-config-app</id>-->
+		<!--                                <phase>test-compile</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>apps</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                            <execution>-->
+		<!--                                <id>export-config-app</id>-->
+		<!--                                <phase>test-compile</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exportAppKeys</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                    
+		<!&ndash;functional init &ndash;>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>org.codehaus.mojo</groupId>-->
+		<!--                        <artifactId>exec-maven-plugin</artifactId>-->
+		<!--                        <version>1.3.2</version>-->
+		<!--                        <executions>-->
+		<!--                            
+		<!&ndash; npm install &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>npm-install</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>npm</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        install-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                            
+		<!&ndash; run integration tests &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>integration</id>-->
+		<!--                                <phase>install</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>node</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        node_modules/cucumber/bin/cucumber.js target/test/integration/features &#45;&#45;format-->
+		<!--                                        json:target/reports.json-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                </plugins>-->
+		<!--            </build>-->
+		<!--        </profile>-->
+		<!--        -->
+		<!--        <profile>-->
+		<!--            <id>proxy-unit-test</id>-->
+		<!--            <build>-->
+		<!--                <plugins>-->
+		<!--                    
+		<!&ndash; run jslint &ndash;>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>com.cj.jshintmojo</groupId>-->
+		<!--                        <artifactId>jshint-maven-plugin</artifactId>-->
+		<!--                        <version>1.6.0</version>-->
+		<!--                        <executions>-->
+		<!--                            <execution>-->
+		<!--                                <id>jslint</id>-->
+		<!--                                <phase>validate</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>lint</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                        <configuration>-->
+		<!--                            <directories>-->
+		<!--                                <directory>apiproxy/resources/jsc</directory>-->
+		<!--                            </directories>-->
+		<!--                            <reporter>jslint</reporter>-->
+		<!--                        </configuration>-->
+		<!--                    </plugin>-->
+		<!--                    
+		<!&ndash;unit init , code coverage , functional init &ndash;>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>org.codehaus.mojo</groupId>-->
+		<!--                        <artifactId>exec-maven-plugin</artifactId>-->
+		<!--                        <version>1.3.2</version>-->
+		<!--                        <executions>-->
+		<!--                            
+		<!&ndash; npm install &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>npm-install</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>npm</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        install-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                            
+		<!&ndash; run unit tests &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>unit</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>node</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        node_modules/istanbul/lib/cli.js cover &#45;&#45;dir target/unit-test-coverage-->
+		<!--                                        node_modules/mocha/bin/_mocha test/unit-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                            
+		<!&ndash; Check Code Coverage&ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>check-coverage</id>-->
+		<!--                                <phase>test</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>exec</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <executable>node</executable>-->
+		<!--                                    <commandlineArgs>-->
+		<!--                                        node_modules/istanbul/lib/cli.js check-coverage-->
+		<!--                                    </commandlineArgs>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                </plugins>-->
+		<!--            </build>-->
+		<!--        </profile>-->
+		<!--        <profile>-->
+		<!--            <id>release</id>-->
+		<!--            
+		<!&ndash; Needs to be activated only when we are performing artifact releases &ndash;>-->
+		<!--            <distributionManagement>-->
+		<!--                <repository>-->
+		<!--                    <id>apiReleaseRepository</id>-->
+		<!--                    <name>Internal Maven Release Repository</name>-->
+		<!--                    <url>${releases.distribution.url}</url>-->
+		<!--                </repository>-->
+		<!--            </distributionManagement>-->
+		<!--        </profile>-->
+		<!--        <profile>-->
+		<!--            <id>developer</id>-->
+		<!--               <properties>    -->
+		<!--               
+		<!&ndash; Default Properties for Developers &ndash;>-->
+		<!--               <env>mock</env>-->
+		<!--               <org>ferguson-api</org>-->
+		<!--               <apigee.tokenurl>https://ferguson.login.apigee.com/oauth/token</apigee.tokenurl>-->
+		<!--               <apigee.authtype>oauth</apigee.authtype>-->
+		<!--               <edgeVhostName>fei-secure</edgeVhostName>-->
+		<!--               </properties>-->
+		<!--        -->
+		<!--            <build>-->
+		<!--                <plugins>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>org.codehaus.mojo</groupId>-->
+		<!--                        <artifactId>properties-maven-plugin</artifactId>-->
+		<!--                        <version>1.0.0</version>-->
+		<!--                        <executions>-->
+		<!--                            <execution>-->
+		<!--                                <phase>initialize</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>read-project-properties</goal>-->
+		<!--                                </goals>-->
+		<!--                                <configuration>-->
+		<!--                                    <files>-->
+		<!--                                        <file>${basedir}/my-tokens.properties</file>-->
+		<!--                                    </files>-->
+		<!--                                </configuration>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                </plugins>-->
+		<!--            </build>-->
+		<!--        </profile>-->
+		<!--        <profile>-->
+		<!--            <id>apigee-prep</id>-->
+		<!--            <properties>-->
+		<!--                <apigee.profile>apigee-prep</apigee.profile>-->
+		<!--                <apigee.env>${env}</apigee.env>-->
+		<!--                <apigee.hosturl>${apigee.api.protocol}://${apigee.api.host}</apigee.hosturl>-->
+		<!--                <apigee.org>${org}</apigee.org>-->
+		<!--                <apigee.username>${username}</apigee.username>-->
+		<!--                <apigee.password>${password}</apigee.password>-->
+		<!--                <apigee.options>clean</apigee.options>-->
+		<!--                <api.northbound.domain>${vhostProtocol}://${vhostDomainName}</api.northbound.domain>-->
+		<!--                <api.testtag>~@wip</api.testtag>-->
+		<!--                <apigee.config.dir>target/resources/edge</apigee.config.dir>-->
+		<!--                <apigee.config.options>delete</apigee.config.options>-->
+		<!--                
+		<!&ndash;<apigee.override.delay>2</apigee.override.delay>&ndash;>-->
+		<!--                <apigee.config.exportDir>target/test/integration</apigee.config.exportDir>-->
+		<!--                <apigee.tokenurl>${tokenurl}</apigee.tokenurl>-->
+		<!--                <apigee.authtype>${authtype}</apigee.authtype>-->
+		<!--                <apigee.bearer>${bearer}</apigee.bearer>-->
+		<!--                <apigee.refresh>${refresh}</apigee.refresh>-->
+		<!--            </properties>-->
+		<!--            <build>-->
+		<!--                <plugins>-->
+		<!--                  
+		<!&ndash;proxy deploy &ndash;>-->
+		<!--                    <plugin>-->
+		<!--                        <groupId>io.apigee.build-tools.enterprise4g</groupId>-->
+		<!--                        <artifactId>apigee-edge-maven-plugin</artifactId>-->
+		<!--                        <executions>-->
+		<!--                            <execution>-->
+		<!--                                <id>configure-bundle-step</id>-->
+		<!--                                <phase>package</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>configure</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                            
+		<!&ndash;deploy bundle &ndash;>-->
+		<!--                            <execution>-->
+		<!--                                <id>deploy-bundle-step</id>-->
+		<!--                                <phase>install</phase>-->
+		<!--                                <goals>-->
+		<!--                                    <goal>deploy</goal>-->
+		<!--                                </goals>-->
+		<!--                            </execution>-->
+		<!--                        </executions>-->
+		<!--                    </plugin>-->
+		<!--                 </plugins>-->
+		<!--            </build>-->
+		<!--        </profile>-->
+	</profiles>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>io.apigee.build-tools.enterprise4g</groupId>
+					<artifactId>apigee-edge-maven-plugin</artifactId>
+					<version>2.1.0</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
